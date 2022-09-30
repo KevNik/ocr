@@ -103,9 +103,9 @@ async function montarDadosParaEnvio() {
 		const resposta = await ApiSEFAZ.enviarPlacaJSON(placa);
 		console.log(resposta)
 		if (resposta.enviado) {
-			console.log('açlkdsjaf')
+			console.log(`${placa.id} enviada`)
 		} else {
-			console.log('fudeu')
+			console.log(`${placa.id} não enviada`)
 		}
 	}))
 })();
