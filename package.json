@@ -1,0 +1,19 @@
+{
+  "name": "ocr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^4.4.0",
+    "axios": "^0.27.2",
+    "dayjs": "^1.11.5",
+    "jimp": "^0.16.2",
+    "prisma": "^4.4.0"
+  }
+}
