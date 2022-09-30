@@ -23,12 +23,14 @@ model t_history {
 }
 
 model t_image {
-  tid      Int    @id
-  image    Bytes?
-  mode     Int
-  roi      String
-  revision BigInt @default(autoincrement())
-  t_log    t_log  @relation(fields: [tid], references: [tid], onDelete: Cascade, onUpdate: Restrict)
+  tid                            Int       @id
+  image                          Bytes?
+  mode                           Int
+  roi                            String
+  revision                       BigInt    @default(autoincrement())
+  data_e_hora_do_envio           DateTime? @db.Timestamp(6)
+  data_e_hora_tentativa_do_envio DateTime? @db.Timestamp(6)
+  t_log                          t_log     @relation(fields: [tid], references: [tid], onDelete: Cascade, onUpdate: Restrict)
 
   @@index([revision(sort: Desc)], map: "idx_image_revision")
 }
