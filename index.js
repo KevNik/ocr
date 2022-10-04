@@ -93,7 +93,7 @@ async function montarDadosParaEnvio() {
 			indiceConfianca: null,
 			placa: placa.plate,
 			tipo_da_placa: null,
-			sentido: placa.capture_way,
+			sentido: process.env.SENTIDO,
 			ultimo_id,
 			velocidade: null,
 		};
