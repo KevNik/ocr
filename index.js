@@ -101,6 +101,11 @@ async function montarDadosParaEnvio(semFoto = false) {
 
 async function sincronizaPlacasJson () {
 	const placas = await montarDadosParaEnvio(true);
+
+	if (placas.length < 0) {
+		return;
+	}
+
 	await placas.forEach(async placa => {
 		if (! placa) {
 			return;
@@ -125,7 +130,7 @@ let rodarPrograma = true;
 while (rodarPrograma) {
 	setTimeout(async () => {
 		await sincronizaPlacasJson();
-		rodarPrograma = true;	
+		rodarPrograma = true;
 	}, 100)
 
 }
