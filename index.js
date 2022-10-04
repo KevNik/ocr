@@ -5,7 +5,7 @@ import Jimp from 'jimp';
 import requisicaoSEFAZ from './api/RequisicaoSEFAZ.js'
 
 const placas_capturadas = prisma.captures;
-let rodarPrograma = true;
+let fecharPrograma = false;
 
 const error_log = mensagem => {
 	log(mensagem, true)
@@ -31,7 +31,7 @@ async function getPlacasCapturadas () {
 			{ id: 'asc' },
 		],
 	}).catch(error => {
-		rodarPrograma = false
+		fecharPrograma = true;
 		error_log(error.message)
 		return [];
 	});
@@ -42,7 +42,7 @@ async function getUltimoId () {
 		select: { id: true },
 		orderBy: { id: 'desc'}
 	}).catch(error => {
-		rodarPrograma = false
+		fecharPrograma = true;
 		error_log(error.message)
 	});
 
@@ -66,7 +66,7 @@ async function getFotoComLegenda(placa) {
 		const image = await Jimp.read(`${process.env.CAMINHO_DAS_PLACAS}/${placa.file_path}`);
 	} catch (error) {
 		console.error(error);
-		rodarPrograma = false
+		fecharPrograma = true;
 		return null;
 	}
 	// const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto, '#000000');
@@ -118,9 +118,26 @@ async function sincronizaPlacasJson () {
 		}
 	})
 }
-while (rodarPrograma) {
-	(async () => {
-		await sincronizaPlacasJson()
-		rodarPrograma = true;
-	})()
+
+(async () => {
+	while (true) {
+		if (fecharPrograma) process.exit()
+
+		try {
+			await sincronizaPlacasJson()
+		} catch (e) {
+			console.error(e)
+			break;
+		}
+
+		await 100;
+	}
+})()
+
+function finalizaPrograma () {
+	fecharPrograma = true;
+
+	console.log('Finalizando programa, aguarde');
 }
+
+process.on('SIGINT', finalizaPrograma)
