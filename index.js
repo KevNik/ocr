@@ -103,19 +103,17 @@ async function montarDadosParaEnvio() {
 let rodarPrograma = true;
 
 while (rodarPrograma) {
-	(async () => {
-		console.log('programa rodando')
-		const placas = await montarDadosParaEnvio();
-		Promise.all(placas.map(async placa => {
-			for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
-				const resposta = await ApiSEFAZ.enviarPlacaJSON(placa);
-				if (resposta.enviado) {
-					ApiSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
-					console.log(`${placa.id} enviada`)
-				} else {
-					console.log(`${placa.id} não enviada`)
-				}
+	const placas = await montarDadosParaEnvio();
+	await placas.forEach(async placa => {
+		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
+			const resposta = await ApiSEFAZ.enviarPlacaJSON(placa);
+			if (resposta.enviado) {
+				const placa_atualizada = await ApiSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
+				console.log(`${placa_atualizada.id} enviada`)
+			} else {
+				console.log(`${placa.id} não enviada`)
 			}
-		}));
-	})();
+		}
+	})
+	rodarPrograma = true;
 }

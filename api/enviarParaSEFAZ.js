@@ -41,6 +41,7 @@ class RequisicaoSEFAZ {
 
 	async enviarPlacaJSON (placa) {
 		if (! placa) {
+			console.log('Sem placa')
 			return { enviado: false }
 		}
 		let response = undefined;
@@ -54,15 +55,17 @@ class RequisicaoSEFAZ {
 		const dados = await response.data;
 
 		if (dados) {
+			console.log('enviado')
 			return { enviado: true }
 		} else {
+			console.log('')
 			return { enviado: false }
 		}
 
 	}
 
 	async enviarPlacaIMG(placa) {
-		const img = 
+		const img = {};
 		await axios.post(this.urlIMG, placa)
 			.then(async response => {
 				if (response.data) {
