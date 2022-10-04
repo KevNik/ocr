@@ -5,6 +5,7 @@ import Jimp from 'jimp';
 import requisicaoSEFAZ from './api/RequisicaoSEFAZ.js'
 
 const placas_capturadas = prisma.captures;
+let rodarPrograma = true;
 
 const error_log = mensagem => {
 	log(mensagem, true)
@@ -64,7 +65,7 @@ async function getFotoComLegenda(placa) {
 	try {
 		const image = await Jimp.read(`${process.env.CAMINHO_DAS_PLACAS}/${placa.file_path}`);
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 		rodarPrograma = false
 		return null;
 	}
@@ -109,6 +110,8 @@ async function sincronizaPlacasJson () {
 
 	await placas.forEach(async placa => {
 		if (! placa) {
+			console.log('sem placa')
+			rodarPrograma = false
 			return;
 		}
 
@@ -125,8 +128,6 @@ async function sincronizaPlacasJson () {
 		}
 	})
 }
-
-let rodarPrograma = true;
 
 while (rodarPrograma) {
 	setTimeout(async () => {
