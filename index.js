@@ -103,6 +103,10 @@ async function montarDadosParaEnvio(semFoto = false) {
 async function sincronizaPlacasJson () {
 	const placas = await montarDadosParaEnvio(true);
 	await placas.forEach(async placa => {
+		if (! placa) {
+			return;
+		}
+
 		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
 			const resposta = await requisicaoSEFAZ.enviarPlacaJSON(placa);
 			if (resposta.enviado) {
