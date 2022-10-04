@@ -2,7 +2,7 @@ import prisma from './prisma/connection.js'
 import dayjs from 'dayjs';
 import log from './logs/betterLog.js'
 import Jimp from 'jimp';
-import ApiSEFAZ from './api/enviarParaSEFAZ.js'
+import requisicaoSEFAZ from './api/RequisicaoSEFAZ.js'
 
 const placas_capturadas = prisma.captures;
 
@@ -80,11 +80,11 @@ async function getFotoComLegenda(placa) {
 }
 
 
-async function montarDadosParaEnvio() {
+async function montarDadosParaEnvio(semFoto = false) {
 	const placas = await getPlacasCapturadas();
 	const ultimo_id = await getUltimoId();
-	return await Promise.all(placas.map(async (placa) => {
-		const foto = await getFotoComLegenda(placa); 
+	return await placas.map(async placa => {
+		const foto = ! semFoto ? await getFotoComLegenda(placa) : null;
 		return {
 			id: placa.id,
 			cEQP: process.env.CODIGO_EQUIPAMENTO,
@@ -97,23 +97,29 @@ async function montarDadosParaEnvio() {
 			ultimo_id,
 			velocidade: null,
 		};
-	}));
+	});
+}
+
+async function sincronizaPlacasJson () {
+	const placas = await montarDadosParaEnvio(true);
+	await placas.forEach(async placa => {
+		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
+			const resposta = await requisicaoSEFAZ.enviarPlacaJSON(placa);
+			if (resposta.enviado) {
+				const placa_atualizada = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
+				if (placa_atualizada) {
+					console.log(`JSON ${placa_atualizada.id} enviada`)
+				}
+			} else {
+				console.log(`JSON ${placa.id} não enviada`)
+			}
+		}
+	})
 }
 
 let rodarPrograma = true;
 
 while (rodarPrograma) {
-	const placas = await montarDadosParaEnvio();
-	await placas.forEach(async placa => {
-		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
-			const resposta = await ApiSEFAZ.enviarPlacaJSON(placa);
-			if (resposta.enviado) {
-				const placa_atualizada = await ApiSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
-				console.log(`${placa_atualizada.id} enviada`)
-			} else {
-				console.log(`${placa.id} não enviada`)
-			}
-		}
-	})
+	await sincronizaPlacasJson();
 	rodarPrograma = true;
 }

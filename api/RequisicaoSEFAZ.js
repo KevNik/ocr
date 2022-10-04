@@ -50,34 +50,33 @@ class RequisicaoSEFAZ {
 			response = await axios.post(this.urlJSON, placa)
 		} catch (error) {
 			console.error(error)
+			return { enviado: false }
 		}
 
-		const dados = await response.data;
-
-		if (dados) {
-			console.log('enviado')
+		if (response.data) {
 			return { enviado: true }
 		} else {
-			console.log('')
 			return { enviado: false }
 		}
 
 	}
 
 	async enviarPlacaIMG(placa) {
-		const img = {};
-		await axios.post(this.urlIMG, placa)
-			.then(async response => {
-				if (response.data) {
-					await this.atualizarStatusDeEnvioDaPlacaIMG(placa);
-					return { enviado: true };
-				}
+		try {
+			const response = await axios.post(this.urlIMG, placa);
+		} catch (error) {
+			console.error(error);
+			return { enviado: false }
+		}
 
-				return { enviado: false };
-			})
-			.catch(err => console.log(err))			
+		if (response.data) {
+			return { enviado: true }
+		} else {
+			return { enviado: false }
+		}
+
 	}
 }
 
-const ApiSEFAZ = new RequisicaoSEFAZ(captures);
-export default ApiSEFAZ;
+const requisicaoSEFAZ = new RequisicaoSEFAZ(captures);
+export default requisicaoSEFAZ;
