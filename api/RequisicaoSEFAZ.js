@@ -15,7 +15,7 @@ class RequisicaoSEFAZ {
 	}
 
 	async atualizarStatusDeEnvioDaPlacaJSON({ id }) {
-		return await this.captures.update({
+		const placa_atualizaada = await this.captures.update({
 			where: {
 				id: id,
 			},
@@ -23,6 +23,8 @@ class RequisicaoSEFAZ {
 				json_dispatch_date_time: dayjs().format(),
 			}
 		});
+
+		return placa_atualizaada != null;
 	}
 
 	async atualizarStatusDeEnvioDaPlacaIMG ({ id }) {
