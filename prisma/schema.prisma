@@ -7,102 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model t_history {
-  tid           Int
-  param         String    @db.VarChar(30)
-  value         String?
-  operator_id   String?
-  operator_name String?
-  mtime         DateTime? @default(now()) @db.Timestamp(6)
-  revision      BigInt    @default(autoincrement())
-  t_log         t_log     @relation(fields: [tid], references: [tid], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([revision(sort: Desc)], map: "idx_history_revision")
-  @@ignore
-}
-
-model t_image {
-  tid                            Int       @id
-  image                          Bytes?
-  mode                           Int
-  roi                            String
-  revision                       BigInt    @default(autoincrement())
-  data_e_hora_do_envio           DateTime? @db.Timestamp(6)
-  data_e_hora_tentativa_do_envio DateTime? @db.Timestamp(6)
-  t_log                          t_log     @relation(fields: [tid], references: [tid], onDelete: Cascade, onUpdate: Restrict)
-
-  @@index([revision(sort: Desc)], map: "idx_image_revision")
-}
-
-model t_log {
-  tid                  Int                   @id @default(autoincrement())
-  lpr_id               String                @db.VarChar(30)
-  lpr_name             String                @db.VarChar(256)
-  lpr_type             String                @db.VarChar(30)
-  reverse              Int?
-  recognition_quality  Int?
-  plate_recognized     String?               @db.VarChar(30)
-  plate_corrected      String?               @db.VarChar(30)
-  country              String?               @db.VarChar(30)
-  country_standard     String?               @db.VarChar(30)
-  time_enter           DateTime?             @db.Timestamp(6)
-  time_best            DateTime?             @db.Timestamp(6)
-  time_leave           DateTime?             @db.Timestamp(6)
-  speed                Float?
-  speed_max            Float?
-  recorded_camera_list String?
-  log_comment          String?
-  direction_name       String?
-  record_mode          Int?                  @db.SmallInt
-  radar_speed          Float?
-  track_id             Int?
-  lane_list            String?
-  plate_rect           String?
-  camera_id            String?
-  units                Int?                  @db.SmallInt
-  province_id          Int?                  @db.SmallInt
-  revision             BigInt[]              @default(dbgenerated("array_fill(nextval('seq_revision'::regclass), ARRAY[2])"))
-  horario_de_envio     DateTime?             @db.Timestamp(6)
-  codigo_retornado     String?               @db.VarChar
-  tentativa_de_envio   DateTime?             @db.Timestamp(6)
-  t_history            t_history[]           @ignore
-  t_image              t_image?
-  t_replicator_mapping t_replicator_mapping?
-  t_result             t_result[]            @ignore
-
-  @@index([plate_recognized], map: "plate_recognized_index")
-  @@index([time_best(sort: Desc)], map: "time_best_index")
-}
-
-model t_replicator_mapping {
-  tid          Int    @id
-  db_id        String @db.VarChar(64)
-  original_tid Int
-  t_log        t_log  @relation(fields: [tid], references: [tid], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([db_id, original_tid], map: "t_replicator_mapping_ukey")
-}
-
-model t_replicator_revision {
-  db_id         String  @id @db.VarChar(64)
-  last_revision BigInt?
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model t_result {
-  tid             Int
-  ts              DateTime? @db.Timestamp(6)
-  result_type     Int
-  source_name     String
-  source_id       String
-  result_comment1 String?
-  found_type      Int?
-  use             Int       @default(1) @db.SmallInt
-  revision        BigInt    @default(autoincrement())
-  t_log           t_log     @relation(fields: [tid], references: [tid], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([tid], map: "fki_t_result_tid_fkey")
-  @@index([revision(sort: Desc)], map: "idx_result_revision")
-  @@ignore
+model captures {
+  id                      Int       @id @default(autoincrement())
+  date_time               DateTime? @db.Timestamp(6)
+  plate                   String?   @db.VarChar
+  capture_way             String?   @db.VarChar
+  camera                  String?   @db.VarChar
+  file_path               String?   @db.VarChar
+  json_dispatch_date_time DateTime? @db.Timestamp(6)
+  img_dispatch_date_time  DateTime? @db.Timestamp(6)
 }
