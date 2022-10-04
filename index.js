@@ -103,18 +103,8 @@ async function montarDadosParaEnvio(semFoto = false) {
 async function sincronizaPlacasJson () {
 	const placas = await montarDadosParaEnvio(true);
 
-	if (placas.length < 0) {
-		console.log('nenhuma placa encontrada')
-		return;
-	}
-
 	await placas.forEach(async placa => {
-		if (! placa) {
-			console.log('sem placa')
-			rodarPrograma = false
-			return;
-		}
-
+		console.log(placa.plate)
 		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
 			const resposta = await requisicaoSEFAZ.enviarPlacaJSON(placa);
 			if (resposta.enviado) {
@@ -128,11 +118,9 @@ async function sincronizaPlacasJson () {
 		}
 	})
 }
-
 while (rodarPrograma) {
-	setTimeout(async () => {
-		await sincronizaPlacasJson();
+	(async () => {
+		await sincronizaPlacasJson()
 		rodarPrograma = true;
-	}, 100)
-
+	})()
 }
