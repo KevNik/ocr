@@ -112,7 +112,7 @@ async function sincronizaPlacasJson () {
 				const placa_atualizada = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
 				if (placa_atualizada) {
 					console.log(`JSON ${placa_atualizada.id} enviada`)
-				} 
+				}
 			} else {
 				console.log(`JSON ${placa.id} não enviada`)
 			}
@@ -123,6 +123,9 @@ async function sincronizaPlacasJson () {
 let rodarPrograma = true;
 
 while (rodarPrograma) {
-	await sincronizaPlacasJson();
-	rodarPrograma = true;
+	setTimeout(async () => {
+		await sincronizaPlacasJson();
+		rodarPrograma = true;	
+	}, 100)
+
 }
