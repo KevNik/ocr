@@ -15,6 +15,10 @@ class RequisicaoSEFAZ {
 	}
 
 	async atualizarStatusDeEnvioDaPlacaJSON({ id }) {
+		if (! id) {
+			return false
+		}
+
 		const placa_atualizaada = await this.captures.update({
 			where: {
 				id: id,

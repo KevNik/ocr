@@ -12,7 +12,6 @@ const error_log = mensagem => {
 
 async function getPlacasCapturadas () {
 	return await placas_capturadas.findMany({
-		take: 10,
 		select: {
 			id: true,
 			date_time: true,
@@ -113,7 +112,7 @@ async function sincronizaPlacasJson () {
 				const placa_atualizada = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
 				if (placa_atualizada) {
 					console.log(`JSON ${placa_atualizada.id} enviada`)
-				}
+				} 
 			} else {
 				console.log(`JSON ${placa.id} não enviada`)
 			}
