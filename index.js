@@ -26,8 +26,8 @@ async function getPlacasCapturadas () {
 			img_dispatch_date_time: null
 		},
 		orderBy: [
-			{json_dispatch_date_time: 'asc'},
-			{img_dispatch_date_time: 'asc'},
+			{ json_dispatch_date_time: 'asc' },
+			{ img_dispatch_date_time: 'asc' },
 			{ id: 'asc' },
 		],
 	}).catch(error => {
@@ -69,11 +69,11 @@ async function getFotoComLegenda(placa) {
 		rodarPrograma = false
 		return null;
 	}
-	const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto, '#000000');
-	const font = await Jimp.loadFont('fonts/font.fnt');
-	const legenda = getLegendaDaCaptura(placa);
-	image.composite(fundoPreto, 0, image.bitmap.height - alturaFundoPreto);
-	image.print(font, 5, image.bitmap.height - alturaFundoPreto, legenda);
+	// const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto, '#000000');
+	// const font = await Jimp.loadFont('fonts/font.fnt');
+	// const legenda = getLegendaDaCaptura(placa);
+	// image.composite(fundoPreto, 0, image.bitmap.height - alturaFundoPreto);
+	// image.print(font, 5, image.bitmap.height - alturaFundoPreto, legenda);
 	image.quality(70);
 	const buffer = await image.getBufferAsync(Jimp.AUTO);
 	return buffer.toString('base64');
