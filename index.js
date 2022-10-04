@@ -23,11 +23,9 @@ async function getPlacasCapturadas () {
 		},
 		where: {
 			json_dispatch_date_time: null,
-			img_dispatch_date_time: null
 		},
 		orderBy: [
 			{ json_dispatch_date_time: 'asc' },
-			{ img_dispatch_date_time: 'asc' },
 			{ id: 'asc' },
 		],
 	}).catch(error => {
@@ -99,43 +97,48 @@ async function montarDadosParaEnvio(semFoto = false) {
 		};
 	});
 }
+let aguardando = false;
 
 async function sincronizaPlacasJson () {
 	const placas = await montarDadosParaEnvio(true);
-
-	await placas.forEach(async placa => {
-		console.log(placa.plate)
+	console.log(placas.length + ' encontradas')
+	aguardando = true;
+	await placas.forEach(async (placa) => {
+		placa = await placa;
 		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
 			const resposta = await requisicaoSEFAZ.enviarPlacaJSON(placa);
 			if (resposta.enviado) {
-				const placa_atualizada = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
-				if (placa_atualizada) {
-					console.log(`JSON ${placa_atualizada.id} enviada`)
+				const { json_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
+				if (json_dispatch_date_time) {
+					console.log(`JSON ${id} enviada`)
 				}
 			} else {
-				console.log(`JSON ${placa.id} não enviada`)
+				const { id } = await placa;
+				console.log(`JSON ${id} não enviada`)
 			}
 		}
 	})
+
+	aguardando = false;
 }
 
 (async () => {
+	console.log('Programa iniciado em: ' + dayjs().format('DD/MM/YYYY HH:mm:ss'));
 	while (true) {
 		if (fecharPrograma) process.exit()
 
-		try {
-			await sincronizaPlacasJson()
-		} catch (e) {
-			console.error(e)
-			break;
+		if (! aguardando) {
+			await sincronizaPlacasJson();
 		}
 
-		await 100;
+		if (fecharPrograma) process.exit()
 	}
+
 })()
 
 function finalizaPrograma () {
 	fecharPrograma = true;
+	aguardando = false;
 
 	console.log('Finalizando programa, aguarde');
 }

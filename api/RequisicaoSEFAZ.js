@@ -50,6 +50,7 @@ class RequisicaoSEFAZ {
 			console.log('Sem placa')
 			return { enviado: false }
 		}
+
 		let response = undefined;
 
 		try {
