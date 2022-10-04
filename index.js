@@ -103,6 +103,7 @@ async function sincronizaPlacasJson () {
 	const placas = await montarDadosParaEnvio(true);
 
 	if (placas.length < 0) {
+		console.log('nenhuma placa encontrada')
 		return;
 	}
 
