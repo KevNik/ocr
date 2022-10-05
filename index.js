@@ -11,7 +11,13 @@ const error_log = mensagem => {
 	log(mensagem, true)
 }
 
-async function getPlacasCapturadas () {
+async function getPlacasCapturadas (semFoto = false) {
+	let where = { img_dispatch_date_time: null }
+
+	if (semFoto) {
+		where = { json_dispatch_date_time: null }
+	}
+
 	return await placas_capturadas.findMany({
 		select: {
 			id: true,
@@ -21,9 +27,7 @@ async function getPlacasCapturadas () {
 			camera: true,
 			file_path: true
 		},
-		where: {
-			json_dispatch_date_time: null,
-		},
+		where,
 		orderBy: [
 			{ json_dispatch_date_time: 'asc' },
 			{ id: 'asc' },
@@ -53,7 +57,7 @@ async function getUltimoId () {
 
 
 function getLegendaDaCaptura(placa) {
-	return `Endereço: ${process.env.ENDERECO} DATA: ${dayjs(placa.date_time).format('DD/MM/YYYY')} HORA: ${dayjs(placa.date_time).format('HH:mm:ss:SSS')} Sentido: ${placa.capture_way}  Município: ${process.env.MUNICIPIO} UF: ${process.env.UF}`
+	return `Placa: ${placa.plate}Endereço: ${process.env.ENDERECO} DATA: ${dayjs(placa.date_time).format('DD/MM/YYYY')} HORA: ${dayjs(placa.date_time).format('HH:mm:ss:SSS')} Sentido: ${placa.capture_way}  Município: ${process.env.MUNICIPIO} UF: ${process.env.UF}`
 }
 
 
@@ -63,32 +67,41 @@ async function getFotoComLegenda(placa) {
 	try {
 		const image = await Jimp.read(`${process.env.CAMINHO_DAS_PLACAS}/${placa.file_path}`);
 	} catch (error) {
-		console.error(error);
-		fecharPrograma = true;
+		log('ERRO AO LER IMAGEM', error)
 		return null;
 	}
-	// const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto, '#000000');
-	// const font = await Jimp.loadFont('fonts/font.fnt');
-	// const legenda = getLegendaDaCaptura(placa);
-	// image.composite(fundoPreto, 0, image.bitmap.height - alturaFundoPreto);
-	// image.print(font, 5, image.bitmap.height - alturaFundoPreto, legenda);
-	image.quality(70);
-	const buffer = await image.getBufferAsync(Jimp.AUTO);
-	return buffer.toString('base64');
+
+	const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto, '#000000')
+	const legenda = getLegendaDaCaptura(placa)
+	const font = await Jimp.loadFont('./fonts/font.fnt')
+	await image.composite(fundoPreto, 0, image.bitmap.height - alturaFundoPreto)
+	await image.print(font, 5, image.bitmap.height - alturaFundoPreto, legenda);
+	await image.quality(60)
+	const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
+	return buffer.toString('base64')
+
 }
 
+function placaFoiTotalmenteReconhecida({ plate }) {
+	return (plate.includes('#') || plate.includes('unknown'));
+}
 
 async function montarDadosParaEnvio(semFoto = false) {
-	const placas = await getPlacasCapturadas();
+	const placas = await getPlacasCapturadas(semFoto);
 	const ultimo_id = await getUltimoId();
 	return await placas.map(async placa => {
-		const foto = ! semFoto ? await getFotoComLegenda(placa) : null;
+		let foto = null;
+		if (! semFoto) {
+			foto = await getFotoComLegenda(placa)
+		}
+
 		return {
 			id: placa.id,
 			cEQP: process.env.CODIGO_EQUIPAMENTO,
 			dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'),
 			foto,
 			indiceConfianca: null,
+			parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
 			placa: placa.plate,
 			tipo_da_placa: null,
 			sentido: process.env.SENTIDO,
@@ -97,50 +110,85 @@ async function montarDadosParaEnvio(semFoto = false) {
 		};
 	});
 }
-let aguardando = false;
+let aguardandoJson = false;
 
 async function sincronizaPlacasJson () {
 	const placas = await montarDadosParaEnvio(true);
-	console.log(placas.length + ' encontradas')
-	aguardando = true;
+	aguardandoJson = true;
 	await placas.forEach(async (placa) => {
 		placa = await placa;
-		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO; i++) {
+		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_JSON; i++) {
 			const resposta = await requisicaoSEFAZ.enviarPlacaJSON(placa);
+
 			if (resposta.enviado) {
 				const { json_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
 				if (json_dispatch_date_time) {
-					console.log(`JSON ${id} enviada`)
+					if (process.env.APP_LEVEL != 'production') {
+						console.log(`JSON ${id} enviada`)
+						break;
+					}
 				}
 			} else {
 				const { id } = await placa;
-				console.log(`JSON ${id} não enviada`)
+				log(`JSON ${id} não enviada`)
 			}
+
 		}
 	})
 
-	aguardando = false;
+	aguardandoJson = false;
 }
 
-(async () => {
-	console.log('Programa iniciado em: ' + dayjs().format('DD/MM/YYYY HH:mm:ss'));
-	while (true) {
-		if (fecharPrograma) process.exit()
+let aguardandoImg = false;
 
-		if (! aguardando) {
-			await sincronizaPlacasJson();
+async function sincronizaPlacasImg () {
+	const placas = await montarDadosParaEnvio();
+	aguardandoImg = true
+	await placas.forEach(async placa => {
+		placa = await placa;
+		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_IMG; i++){
+			const resposta = await requisicaoSEFAZ.enviarPlacaIMG(placa);
+			if (resposta.enviado) {
+				const { img_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
+				if (img_dispatch_date_time) {
+					log(`IMG ${id} enviada`, true)
+				}
+			} else {
+				log(`IMG ${placa.id} NÃO ENVIADA`, true)
+			}
 		}
 
-		if (fecharPrograma) process.exit()
-	}
-
-})()
+	});
+	aguardandoImg = false;
+}
 
 function finalizaPrograma () {
 	fecharPrograma = true;
-	aguardando = false;
-
+	aguardandoJson = false;
+	aguardandoImg = false
 	console.log('Finalizando programa, aguarde');
 }
 
 process.on('SIGINT', finalizaPrograma)
+
+try {
+	(async () => {
+		console.log('Programa iniciado em: ' + dayjs().format('DD/MM/YYYY HH:mm:ss'));
+		while (true) {
+			if (fecharPrograma) process.exit()
+
+			if (! aguardandoJson) {
+				await sincronizaPlacasJson();
+			}
+
+			if (! aguardandoImg) {
+				// await sincronizaPlacasImg();
+			}
+
+			if (fecharPrograma) process.exit()
+		}
+
+	})()
+} catch (e) {
+	log('ERRO AO INICIALIZAR PROGRAMA', e)
+}

@@ -1,6 +1,7 @@
 import prisma from '../prisma/connection.js';
 import dayjs from 'dayjs';
 import axios from "axios";
+import log from "../logs/betterLog.js";
 
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
@@ -16,30 +17,45 @@ class RequisicaoSEFAZ {
 
 	async atualizarStatusDeEnvioDaPlacaJSON({ id }) {
 		if (! id) {
-			return false
+			log('SEM ID PARA ATUALIZAR STATUS DE ENVIO JSON', true);
+			return false;
 		}
 
-		const placa_atualizaada = await this.captures.update({
-			where: {
-				id: id,
-			},
-			data: {
-				json_dispatch_date_time: dayjs().format(),
-			}
-		});
+		try {
+			const placa_atualizaada = await this.captures.update({
+				where: {
+					id: id,
+				},
+				data: {
+					json_dispatch_date_time: dayjs().format(),
+				}
+			});
+		} catch (error) {
+			log('ERROR AO ATUALIZAR STATUS DE ENVIO JSON', error)
+		}
+
 
 		return placa_atualizaada != null;
 	}
 
 	async atualizarStatusDeEnvioDaPlacaIMG ({ id }) {
-		const imagemAtualizada = await this.captures.update({
-			where: {
-				id
-			},
-			data: {
-				img_dispatch_date_time: dayjs().format()
-			}
-		})
+		if (! id) {
+			log('SEM ID PARA ATUALIZAR STATUS DE ENVIO DA IMAGEM', true);
+			return false;
+		}
+		try {
+			const imagemAtualizada = await this.captures.update({
+				where: {
+					id
+				},
+				data: {
+					img_dispatch_date_time: dayjs().format()
+				}
+			})
+		} catch (error) {
+			log('ERRO AO ATUALIZAR STATUS DE ENVIO DA IMAGEM', erro)
+			return false;
+		}
 
 		return imagemAtualizada != null;
 
@@ -47,32 +63,31 @@ class RequisicaoSEFAZ {
 
 	async enviarPlacaJSON (placa) {
 		if (! placa) {
-			console.log('Sem placa')
+			log('SEM PLACA PARA ENVIO JSON', true)
 			return { enviado: false }
 		}
-
-		let response = undefined;
 
 		try {
-			response = await axios.post(this.urlJSON, placa)
+			const response = await axios.post(this.urlJSON, placa)
 		} catch (error) {
-			console.error(error)
+			log('erro', error);
 			return { enviado: false }
 		}
-
-		if (response.data) {
-			return { enviado: true }
-		} else {
-			return { enviado: false }
-		}
-
+		console.log(response)
+		return response.data ? { enviado: true } : { enviado: false }
 	}
 
 	async enviarPlacaIMG(placa) {
+		if (!(placa && placa.foto)) {
+			// console.log(placa)
+			// log('sem placa', true)
+			return { enviado: false }
+		}
+
 		try {
 			const response = await axios.post(this.urlIMG, placa);
 		} catch (error) {
-			console.error(error);
+			log('ERRO AO ENVIAR PLACA', error)
 			return { enviado: false }
 		}
 
