@@ -22,7 +22,7 @@ class RequisicaoSEFAZ {
 		}
 
 		try {
-			const placa_atualizaada = await this.captures.update({
+			const placa_atualizada = await this.captures.update({
 				where: {
 					id: id,
 				},
@@ -67,13 +67,15 @@ class RequisicaoSEFAZ {
 			return { enviado: false }
 		}
 
+		let response;
+
 		try {
-			const response = await axios.post(this.urlJSON, placa)
+			response = await axios.post(this.urlJSON, placa)
 		} catch (error) {
 			log('erro', error);
 			return { enviado: false }
 		}
-		console.log(response)
+
 		return response.data ? { enviado: true } : { enviado: false }
 	}
 
