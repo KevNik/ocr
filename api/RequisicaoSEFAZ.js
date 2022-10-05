@@ -35,7 +35,7 @@ class RequisicaoSEFAZ {
 		}
 
 
-		return placa_atualizaada != null;
+		return placa_atualizada != null;
 	}
 
 	async atualizarStatusDeEnvioDaPlacaIMG ({ id }) {
