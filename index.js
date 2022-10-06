@@ -10,7 +10,11 @@ let aguardandoJson = false;
 var aguardandoImg = false;
 
 function alterarEstadoDeAguardoJSON(deveAguardar) {
-	aguardandoJson = deveAguardar
+	aguardandoJson = deveAguardar;
+}
+
+function alterarEstadoDeAguardoIMG(deveAguardar) {
+	aguardandoImg = deveAguardar;
 }
 
 const error_log = mensagem => {
@@ -65,28 +69,39 @@ async function getUltimoId () {
 
 
 function getLegendaDaCaptura(placa) {
-	return `Placa: ${placa.plate}Endereço: ${process.env.ENDERECO} DATA: ${dayjs(placa.date_time).format('DD/MM/YYYY')} HORA: ${dayjs(placa.date_time).format('HH:mm:ss:SSS')} Sentido: ${placa.capture_way}  Município: ${process.env.MUNICIPIO} UF: ${process.env.UF}`
+	return {
+		superior: `Placa: ${placa.plate} Endereço: ${process.env.ENDERECO}`,
+		intermediario: `DATA: ${dayjs(placa.date_time).format('DD/MM/YYYY')} HORA: ${dayjs(placa.date_time).format('HH:mm:ss:SSS')}`,
+		inferior: `Sentido: ${process.env.SENTIDO}  Município: ${process.env.MUNICIPIO} UF: ${process.env.UF}`
+	}
 }
 
 
 async function getFotoComLegenda(placa) {
 	const alturaFundoPreto = 25;
-
+	
+	let image;
+	
 	try {
-		const image = await Jimp.read(`${process.env.CAMINHO_DAS_PLACAS}/${placa.file_path}`);
+		image = await Jimp.read(`${process.env.CAMINHO_DAS_PLACAS}/${placa.file_path}`);
 	} catch (error) {
 		log('ERRO AO LER IMAGEM', error)
 		return null;
 	}
-
-	const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto, '#000000')
-	const legenda = getLegendaDaCaptura(placa)
+	
+	const fundoPreto = new Jimp(image.bitmap.width, alturaFundoPreto * 3, '#000000')
+	const legenda = await getLegendaDaCaptura(placa)
 	const font = await Jimp.loadFont('./fonts/font.fnt')
-	await image.composite(fundoPreto, 0, image.bitmap.height - alturaFundoPreto)
-	await image.print(font, 5, image.bitmap.height - alturaFundoPreto, legenda);
+	await image.composite(fundoPreto, 0, image.bitmap.height - (alturaFundoPreto))
+	await image.composite(fundoPreto, 0, image.bitmap.height - (alturaFundoPreto * 2))
+	await image.composite(fundoPreto, 0, image.bitmap.height - (alturaFundoPreto * 3))
+	await image.print(font, 5, image.bitmap.height - alturaFundoPreto, legenda.superior);
+	await image.print(font, 5, image.bitmap.height - (alturaFundoPreto * 2), legenda.intermediario)
+	await image.print(font, 5, image.bitmap.height - (alturaFundoPreto * 3), legenda.inferior)
 	await image.quality(60)
-	const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
-	return buffer.toString('base64')
+	image.write('./teste')
+	const buffer = await image.getBufferAsync(Jimp.MIME_JPEG)
+	return await buffer.toString('base64')
 
 }
 
@@ -149,29 +164,30 @@ async function sincronizaPlacasJson () {
 
 async function sincronizaPlacasImg () {
 	const placas = await montarDadosParaEnvio();
-	aguardandoImg = true
+	
+	alterarEstadoDeAguardoIMG(true)
 	await placas.forEach(async placa => {
 		placa = await placa;
 		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_IMG; i++){
-			const resposta = await requisicaoSEFAZ.enviarPlacaIMG(placa);
-			if (resposta.enviado) {
-				const { img_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
-				if (img_dispatch_date_time) {
-					log(`IMG ${id} enviada`, true)
-				}
-			} else {
-				log(`IMG ${placa.id} NÃO ENVIADA`, true)
-			}
+			//const resposta = await requisicaoSEFAZ.enviarPlacaIMG(placa);
+			//if (resposta.enviado) {
+			//	const { img_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
+			//	if (img_dispatch_date_time) {
+			//		log(`IMG ${id} enviada`, true)
+			//	}
+			//} else {
+			//	log(`IMG ${placa.id} NÃO ENVIADA`, true)
+			//}
 		}
 
 	});
-	aguardandoImg = false;
+	alterarEstadoDeAguardoIMG(false)
 }
 
 function finalizaPrograma () {
 	fecharPrograma = true;
 	alterarEstadoDeAguardoJSON(false)
-	aguardandoImg = false
+	alterarEstadoDeAguardoIMG(false)
 	console.log('Finalizando programa, aguarde');
 }
 
@@ -185,13 +201,18 @@ try {
 			await sincronizaPlacasJson();
 		}				
 		
+		if (fecharPrograma) process.exit()
+	}, 100);
 
+	await setInterval(async() => {
+		if (fecharPrograma) process.exit()
+			
 		if (! aguardandoImg) {
-			// await sincronizaPlacasImg();
+			await sincronizaPlacasImg();
 		}
 		
-		if (fecharPrograma) process.exit()	
-	}, 100)
+		if (fecharPrograma) process.exit()
+	}, 1000);
 	 
 } catch (e) {
 	log('ERRO AO INICIALIZAR PROGRAMA', e)

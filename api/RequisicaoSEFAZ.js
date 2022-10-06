@@ -70,12 +70,9 @@ class RequisicaoSEFAZ {
 		}
 
 		let response;
-		
-		log('antes do envio')
 
 		try {
 			response = await axios.post(this.urlJSON, placa)
-			log('depois do envio da placa')
 		} catch (error) {
 			log('erro', error);
 			return { enviado: false }
@@ -86,13 +83,14 @@ class RequisicaoSEFAZ {
 
 	async enviarPlacaIMG(placa) {
 		if (!(placa && placa.foto)) {
-			// console.log(placa)
-			// log('sem placa', true)
+			log('SEM FOTO PARA ENVIO', true)
 			return { enviado: false }
 		}
-
+		
+		let response;
+		
 		try {
-			const response = await axios.post(this.urlIMG, placa);
+			response = await axios.post(this.urlIMG, placa);
 		} catch (error) {
 			log('ERRO AO ENVIAR PLACA', error)
 			return { enviado: false }
