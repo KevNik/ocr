@@ -99,7 +99,6 @@ async function getFotoComLegenda(placa) {
 	await image.print(font, 5, image.bitmap.height - (alturaFundoPreto * 2), legenda.intermediario)
 	await image.print(font, 5, image.bitmap.height - (alturaFundoPreto * 3), legenda.inferior)
 	await image.quality(60)
-	image.write('./teste')
 	const buffer = await image.getBufferAsync(Jimp.MIME_JPEG)
 	return await buffer.toString('base64')
 
@@ -169,15 +168,15 @@ async function sincronizaPlacasImg () {
 	await placas.forEach(async placa => {
 		placa = await placa;
 		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_IMG; i++){
-			//const resposta = await requisicaoSEFAZ.enviarPlacaIMG(placa);
-			//if (resposta.enviado) {
-			//	const { img_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
-			//	if (img_dispatch_date_time) {
-			//		log(`IMG ${id} enviada`, true)
-			//	}
-			//} else {
-			//	log(`IMG ${placa.id} NÃO ENVIADA`, true)
-			//}
+			const resposta = await requisicaoSEFAZ.enviarPlacaIMG(placa);
+			if (resposta.enviado) {
+				const { img_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
+				if (img_dispatch_date_time) {
+					log(`IMG ${id} enviada`, true)
+				}
+			} else {
+				log(`IMG ${placa.id} NÃO ENVIADA`, true)
+			}
 		}
 
 	});
