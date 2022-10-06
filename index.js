@@ -1,4 +1,4 @@
-import prisma from './prisma/connection.js'
+import prisma from './prisma/connection.js';
 import dayjs from 'dayjs';
 import log from './logs/betterLog.js'
 import Jimp from 'jimp';
@@ -195,11 +195,11 @@ try {
 	console.log('Programa iniciado em: ' + dayjs().format('DD/MM/YYYY HH:mm:ss'));
 	await setInterval(async () => {
 		if (fecharPrograma) process.exit()
-			
+
 		if (! aguardandoJson) {
 			await sincronizaPlacasJson();
-		}				
-		
+		}
+
 		if (fecharPrograma) process.exit()
 	}, 100);
 

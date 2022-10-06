@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ocr:sync-json": "node src/sincronizarJson.js",
+    "ocr:sync-img": "node src/sincronizarImg.js"
   },
   "author": "",
   "license": "ISC",
