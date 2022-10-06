@@ -5,7 +5,13 @@ import Jimp from 'jimp';
 import requisicaoSEFAZ from './api/RequisicaoSEFAZ.js'
 
 const placas_capturadas = prisma.captures;
-let fecharPrograma = false;
+var fecharPrograma = false;
+let aguardandoJson = false;
+var aguardandoImg = false;
+
+function alterarEstadoDeAguardoJSON(deveAguardar) {
+	aguardandoJson = deveAguardar
+}
 
 const error_log = mensagem => {
 	log(mensagem, true)
@@ -15,6 +21,8 @@ async function getPlacasCapturadas (semFoto = false) {
 	let where = { img_dispatch_date_time: null }
 
 	if (semFoto) {
+		alterarEstadoDeAguardoJSON(true)
+
 		where = { json_dispatch_date_time: null }
 	}
 
@@ -88,6 +96,7 @@ function placaFoiTotalmenteReconhecida({ plate }) {
 
 async function montarDadosParaEnvio(semFoto = false) {
 	const placas = await getPlacasCapturadas(semFoto);
+
 	const ultimo_id = await getUltimoId();
 	return await placas.map(async placa => {
 		let foto = null;
@@ -96,29 +105,28 @@ async function montarDadosParaEnvio(semFoto = false) {
 		}
 
 		return {
-			id: placa.id,
-			cEQP: process.env.CODIGO_EQUIPAMENTO,
-			dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'),
-			foto,
-			indiceConfianca: null,
-			parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
-			placa: placa.plate,
-			tipo_da_placa: null,
-			sentido: process.env.SENTIDO,
-			ultimo_id,
-			velocidade: null,
+			id: placa.id, // img
+			cEQP: process.env.CODIGO_EQUIPAMENTO, // ambos
+			dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'), // ambos
+			foto, //img
+			indiceConfianca: null, //img
+			parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa), //ambos
+			placa: placa.plate, //ambos
+			tipo_da_placa: null, // img
+			sentido: process.env.SENTIDO, //ambos
+			velocidade: null, //img
 		};
 	});
 }
-let aguardandoJson = false;
 
-async function sincronizaPlacasJson () {
+async function sincronizaPlacasJson () {	
 	const placas = await montarDadosParaEnvio(true);
-	aguardandoJson = true;
+	
 	await placas.forEach(async (placa) => {
 		placa = await placa;
 		for(let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_JSON; i++) {
 			const resposta = await requisicaoSEFAZ.enviarPlacaJSON(placa);
+			console.log('resposta do envio')
 
 			if (resposta.enviado) {
 				const { json_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
@@ -135,11 +143,9 @@ async function sincronizaPlacasJson () {
 
 		}
 	})
-
-	aguardandoJson = false;
+	
+	alterarEstadoDeAguardoJSON(false);
 }
-
-let aguardandoImg = false;
 
 async function sincronizaPlacasImg () {
 	const placas = await montarDadosParaEnvio();
@@ -164,31 +170,29 @@ async function sincronizaPlacasImg () {
 
 function finalizaPrograma () {
 	fecharPrograma = true;
-	aguardandoJson = false;
+	alterarEstadoDeAguardoJSON(false)
 	aguardandoImg = false
 	console.log('Finalizando programa, aguarde');
 }
 
 process.on('SIGINT', finalizaPrograma)
-
 try {
-	(async () => {
-		console.log('Programa iniciado em: ' + dayjs().format('DD/MM/YYYY HH:mm:ss'));
-		while (true) {
-			if (fecharPrograma) process.exit()
+	console.log('Programa iniciado em: ' + dayjs().format('DD/MM/YYYY HH:mm:ss'));
+	await setInterval(async () => {
+		if (fecharPrograma) process.exit()
+			
+		if (! aguardandoJson) {
+			await sincronizaPlacasJson();
+		}				
+		
 
-			if (! aguardandoJson) {
-				await sincronizaPlacasJson();
-			}
-
-			if (! aguardandoImg) {
-				// await sincronizaPlacasImg();
-			}
-
-			if (fecharPrograma) process.exit()
+		if (! aguardandoImg) {
+			// await sincronizaPlacasImg();
 		}
-
-	})()
+		
+		if (fecharPrograma) process.exit()	
+	}, 100)
+	 
 } catch (e) {
 	log('ERRO AO INICIALIZAR PROGRAMA', e)
 }

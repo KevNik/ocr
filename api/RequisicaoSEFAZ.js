@@ -20,9 +20,11 @@ class RequisicaoSEFAZ {
 			log('SEM ID PARA ATUALIZAR STATUS DE ENVIO JSON', true);
 			return false;
 		}
+		
+		let placa_atualizada;
 
 		try {
-			const placa_atualizada = await this.captures.update({
+			placa_atualizada = await this.captures.update({
 				where: {
 					id: id,
 				},
@@ -68,9 +70,12 @@ class RequisicaoSEFAZ {
 		}
 
 		let response;
+		
+		log('antes do envio')
 
 		try {
 			response = await axios.post(this.urlJSON, placa)
+			log('depois do envio da placa')
 		} catch (error) {
 			log('erro', error);
 			return { enviado: false }
