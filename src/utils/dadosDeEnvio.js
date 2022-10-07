@@ -10,10 +10,11 @@ async function getFoto(placa, semFoto) {
 
 export default async function montarDadosParaEnvio(semFoto = false) {
     const placas = await getPlacasCapturadas(semFoto);
-    const ultimoId = getUltimoId(!semFoto);
+    const ultimoId = await getUltimoId(!semFoto);
     return await placas.map(async placa => {
-        let foto = getFoto(placa, semFoto);
-        if (!semFoto) {
+        let foto = await getFoto(placa, semFoto);
+
+        if (semFoto) {
             return {
                 dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'),
                 parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
