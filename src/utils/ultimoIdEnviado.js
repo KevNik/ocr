@@ -9,7 +9,7 @@ export default async function getUltimoId(deImagem = false) {
     ];
 
     if (deImagem) {
-        where = { not: { img_dispatch_date_time: null } }
+        where = { NOT: { img_dispatch_date_time: null } }
         orderBy = [
             { img_dispatch_date_time: 'desc' }
         ];
