@@ -27,7 +27,7 @@ export default async function montarDadosParaEnvio(semFoto = false) {
 
         return {
             id: placa.id, // img
-            ultimo_id: ultimoId,
+            ultimo_id: ultimoId.id,
             cEQP: process.env.CODIGO_EQUIPAMENTO, // ambos
             dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400', // ambos
             foto, //img
