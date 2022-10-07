@@ -1,5 +1,5 @@
 import prisma from './prisma/connection.js';
-import dayjs from 'dayjs';
+import dayjs from './src/utils/data.js';
 import log from './logs/betterLog.js'
 import Jimp from 'jimp';
 import requisicaoSEFAZ from './api/RequisicaoSEFAZ.js'

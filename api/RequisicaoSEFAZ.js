@@ -1,5 +1,5 @@
 import prisma from '../prisma/connection.js';
-import dayjs from 'dayjs';
+import dayjs from '../src/utils/data.js';
 import axios from "axios";
 import log from "../logs/betterLog.js";
 

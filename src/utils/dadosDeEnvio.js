@@ -1,7 +1,7 @@
 import getPlacasCapturadas from "./placasCapturadas.js";
 import getUltimoId from "./ultimoIdEnviado.js";
 import getFotoComLegenda from "./fotoComLegenda.js";
-import dayjs from "dayjs";
+import dayjs from "./data.js";
 import placaFoiTotalmenteReconhecida from "./placaFoiTotalmenteReconhecida.js";
 
 async function getFoto(placa, semFoto) {
@@ -17,7 +17,7 @@ export default async function montarDadosParaEnvio(semFoto = false) {
         if (semFoto) {
             return {
 				id: placa.id,
-                dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'),
+                dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400',
                 parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
                 placa: placa.plate,
                 sentido: process.env.SENTIDO,
@@ -28,7 +28,7 @@ export default async function montarDadosParaEnvio(semFoto = false) {
             id: placa.id, // img
             ultimo_id: ultimoId,
             cEQP: process.env.CODIGO_EQUIPAMENTO, // ambos
-            dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'), // ambos
+            dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400', // ambos
             foto, //img
             indiceConfianca: null, //img
             parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa), //ambos

@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import dayjs from "../src/utils/data.js"
 
 export default function log(message, error = false) {
   const horario = dayjs().format('DD/MM/YYYY HH:mm:ss')

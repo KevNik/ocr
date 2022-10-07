@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs from "./data.js";
 
 export function getLegendaDaCaptura(placa) {
     return {
