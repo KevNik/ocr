@@ -17,6 +17,7 @@ export default async function montarDadosParaEnvio(semFoto = false) {
         if (semFoto) {
             return {
 				id: placa.id,
+                cEQP: process.env.CODIGO_EQUIPAMENTO,
                 dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400',
                 parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
                 placa: placa.plate,

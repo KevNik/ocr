@@ -4,6 +4,6 @@ import timezone from "dayjs/plugin/utc.js"
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-dayjs.tz.setDefault('America/Campo_Grande')
+dayjs.tz('America/Campo_Grande')
 
 export default dayjs
