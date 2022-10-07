@@ -45,6 +45,9 @@ class RequisicaoSEFAZ {
 			log('SEM ID PARA ATUALIZAR STATUS DE ENVIO DA IMAGEM', true);
 			return false;
 		}
+		
+		let imagemAtualizada;
+		
 		try {
 			const imagemAtualizada = await this.captures.update({
 				where: {
@@ -78,7 +81,7 @@ class RequisicaoSEFAZ {
 			return { enviado: false }
 		}
 
-		return response.data ? { enviado: true } : { enviado: false }
+		return response.status == 200 ? { enviado: true } : { enviado: false }
 	}
 
 	async enviarPlacaIMG(placa) {
@@ -95,6 +98,7 @@ class RequisicaoSEFAZ {
 			log('ERRO AO ENVIAR PLACA', error)
 			return { enviado: false }
 		}
+		
 
 		if (response.data) {
 			return { enviado: true }

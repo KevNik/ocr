@@ -17,10 +17,12 @@ function atualizarEstadoDeAguardo(deveAguardar) {
 async function sincronizarPlacasJSON() {
     atualizarEstadoDeAguardo(true);
     const placas = await montarDadosParaEnvio(true);
-
+	
     await placas.forEach(async placa => {
         placa = await placa;
+
         const { enviado } = await requisicaoSEFAZ.enviarPlacaJSON(placa);
+		
         if (enviado) {
             const { json_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaJSON(placa);
             if (json_dispatch_date_time) {
@@ -45,7 +47,7 @@ try {
         }
 
         if (finalizarPrograma) process.exit()
-    },100);
+    }, 100);
 } catch (error) {
     log('ERRO AO INICIALIZAR', error);
 }

@@ -18,8 +18,10 @@ async function sincronizarPlacasIMG() {
     atualizarEstadoDeAguardo(true)
     const placas = await montarDadosParaEnvio();
     await placas.forEach(async placa => {
+		placa = await placa;
         for (let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_IMG; i++) {
             const { enviado } = await requisicaoSEFAZ.enviarPlacaIMG(placa);
+			
             if (enviado) {
                 const { img_dispatch_date_time, id } = await requisicaoSEFAZ.atualizarStatusDeEnvioDaPlacaIMG(placa);
                 if (img_dispatch_date_time) {
@@ -39,8 +41,9 @@ process.on('SIGINT', fecharPrograma)
 try {
     setInterval(async () => {
         if (finalizarPrograma) process.exit()
-
+		
         if (!aguardandoImg) {
+			log('Sincornizando imagens')
             await sincronizarPlacasIMG();
         }
 

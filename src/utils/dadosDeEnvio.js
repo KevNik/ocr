@@ -13,9 +13,10 @@ export default async function montarDadosParaEnvio(semFoto = false) {
     const ultimoId = await getUltimoId(!semFoto);
     return await placas.map(async placa => {
         let foto = await getFoto(placa, semFoto);
-
+		
         if (semFoto) {
             return {
+				id: placa.id,
                 dhPass: dayjs(placa.time).format('YYYY-MM-DD HH:mm:ss:SSS'),
                 parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
                 placa: placa.plate,
