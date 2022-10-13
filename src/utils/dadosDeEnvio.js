@@ -12,6 +12,8 @@ export default async function montarDadosParaEnvio(semFoto = false) {
     const placas = await getPlacasCapturadas(semFoto);
     const ultimoId = await getUltimoId(!semFoto);
     return await placas.map(async placa => {
+		placa = await placa;
+		console.log(placa)
         let foto = await getFoto(placa, semFoto);
 		
         if (semFoto) {
@@ -31,10 +33,10 @@ export default async function montarDadosParaEnvio(semFoto = false) {
             cEQP: process.env.CODIGO_EQUIPAMENTO, // ambos
             dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400', // ambos
             foto, //img
-            indiceConfianca: null, //img
+            indiceConfianca: ! placaFoiTotalmenteReconhecida(placa) ? 99 : 0, //img
             parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa), //ambos
             placa: placa.plate, //ambos
-            tipo_da_placa: null, // img
+            tipo_da_placa: 'BRA_MERC', // img
             sentido: process.env.SENTIDO, //ambos
             velocidade: null, //img
         }
