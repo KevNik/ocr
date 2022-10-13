@@ -58,7 +58,7 @@ class RequisicaoSEFAZ {
 				}
 			})
 		} catch (error) {
-			log('ERRO AO ATUALIZAR STATUS DE ENVIO DA IMAGEM', erro)
+			log('ERRO AO ATUALIZAR STATUS DE ENVIO DA IMAGEM', error)
 			return false;
 		}
 
