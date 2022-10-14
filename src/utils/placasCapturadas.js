@@ -20,6 +20,7 @@ export default async function getPlacasCapturadas(semFoto = false) {
 
     try {
         return await placas_capturadas.findMany({
+			take: 10,
             select: {
                 id: true,
                 date_time: true,

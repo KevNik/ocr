@@ -13,7 +13,6 @@ export default async function montarDadosParaEnvio(semFoto = false) {
     const ultimoId = await getUltimoId(!semFoto);
     return await placas.map(async placa => {
 		placa = await placa;
-		console.log(placa)
         let foto = await getFoto(placa, semFoto);
 		
         if (semFoto) {
