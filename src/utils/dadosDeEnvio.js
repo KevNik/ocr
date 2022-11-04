@@ -38,6 +38,8 @@ export default async function montarDadosParaEnvio(semFoto = false) {
             tipo_da_placa: 'BRA_MERC', // img
             sentido: process.env.SENTIDO, //ambos
             velocidade: 0, //img
+            lat: process.env.LAT,
+            lng: process.env.LNG
         }
     })
 }
