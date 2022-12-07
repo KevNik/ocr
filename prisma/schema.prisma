@@ -14,6 +14,7 @@ model captures {
   capture_way             String?   @db.VarChar
   camera                  String?   @db.VarChar
   file_path               String?   @db.VarChar
+  dispatch_try_date_time  DateTime? @db.Timestamp(6)
   json_dispatch_date_time DateTime? @db.Timestamp(6)
   img_dispatch_date_time  DateTime? @db.Timestamp(6)
 }
