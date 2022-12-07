@@ -19,6 +19,9 @@ async function sincronizarPlacasIMG() {
     const placas = await montarDadosParaEnvio();
     await placas.forEach(async placa => {
 		placa = await placa;
+
+        
+
         for (let i = 0; i < process.env.TENTATIVAS_DE_ENVIO_IMG; i++) {
             const { enviado } = await requisicaoSEFAZ.enviarPlacaIMG(placa);
 			

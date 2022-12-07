@@ -13,13 +13,20 @@ export default async function montarDadosParaEnvio(semFoto = false) {
     const ultimoId = await getUltimoId(!semFoto);
     return await placas.map(async placa => {
 		placa = await placa;
+
+        await placa.update({
+            data: {
+                dispatch_try_date_time: dayjs()
+            }
+        });
+
         let foto = await getFoto(placa, semFoto);
 		
         if (semFoto) {
             return {
 				id: placa.id,
                 cEQP: process.env.CODIGO_EQUIPAMENTO,
-                dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400',
+                dhPass: dayjs(placa.date_time).format('DD-MM-YYYYTHH:mm:ss') + '-0400',
                 parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa),
                 placa: placa.plate,
                 sentido: process.env.SENTIDO,
