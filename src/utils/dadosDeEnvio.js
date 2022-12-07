@@ -3,6 +3,9 @@ import getUltimoId from "./ultimoIdEnviado.js";
 import getFotoComLegenda from "./fotoComLegenda.js";
 import dayjs from "./data.js";
 import placaFoiTotalmenteReconhecida from "./placaFoiTotalmenteReconhecida.js";
+import prisma from '../../prisma/connection.js'
+
+const placas_capturadas = prisma.captures;
 
 async function getFoto(placa, semFoto) {
     return !semFoto ? await getFotoComLegenda(placa) : null;
@@ -14,11 +17,7 @@ export default async function montarDadosParaEnvio(semFoto = false) {
     return await placas.map(async placa => {
 		placa = await placa;
 
-        await placa.update({
-            data: {
-                dispatch_try_date_time: dayjs()
-            }
-        });
+        await prisma.$queryRaw`UPDATE captures SET dispatch_try_date_time = now() where id = ${placa.id};`
 
         let foto = await getFoto(placa, semFoto);
 		
@@ -37,7 +36,7 @@ export default async function montarDadosParaEnvio(semFoto = false) {
             id: placa.id, // img
             ultimo_id: ultimoId ? ultimoId.id : null,
             cEQP: process.env.CODIGO_EQUIPAMENTO, // ambos
-            dhPass: dayjs(placa.time).format('DD-MM-YYYYTHH:mm:ss') + '-0400', // ambos
+            dhPass: dayjs(placa.date_time).format('DD-MM-YYYYTHH:mm:ss') + '-0400', // ambos
             foto, //img
             indiceConfianca: ! placaFoiTotalmenteReconhecida(placa) ? 99 : 0, //img
             parcialmente_reconhecida: placaFoiTotalmenteReconhecida(placa), //ambos
